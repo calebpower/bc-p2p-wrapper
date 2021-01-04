@@ -1,9 +1,11 @@
 package com.calebpower.crypto.bc;
 
 import java.security.KeyPair;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Security;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
 
 /**
@@ -22,7 +24,7 @@ public class BCP2PTestDriver {
    */
   public static void main(String... args) {
     System.out.println("Hello, world!");
-    // Security.addProvider(new BouncyCastleProvider());
+    Security.addProvider(new BouncyCastleProvider());
     
     String plaintext = "This is my really cool plaintext.";
     
@@ -43,30 +45,59 @@ public class BCP2PTestDriver {
       AsymmetricEngine asymmetricEngine = new AsymmetricEngine();
       KeyPair alice = asymmetricEngine.genKey();
       String alicePriv = new String(Base64.encode(alice.getPrivate().getEncoded()));
-      
-      //PrivateKeyFactory.createKey(Base64.decode(alicePriv));
-      //ECPrivateKeySpec keySpec = new ECPrivate
-      
-      //ECNamedCurveParameterSpec spec = ECNamedCurveTable.getParameterSpec("secp384r1");
-      //ECPrivateKeySpec ecPrivateKeySpec = new ECPrivateKeySpec(new BigInteger(1, Base64.decode(alicePriv)), spec);
-      
-      try {
-        new X509EncodedKeySpec(Base64.decode(alicePriv));
-        System.out.println("X509 works");
-      } catch(Exception e) {
-        System.out.println("X509 doesn't work");
-      }
-      
-      try {
-        new PKCS8EncodedKeySpec(Base64.decode(alicePriv));
-        System.out.println("PKCS8 works");
-      } catch(Exception e) {
-        System.out.println("PKCS8 doesn't work");
-      }
-      
-      System.out.println(alicePriv);
+      String alicePub = new String(Base64.encode(alice.getPublic().getEncoded()));
       KeyPair bob = asymmetricEngine.genKey();
+      String bobPriv = new String(Base64.encode(bob.getPrivate().getEncoded()));
+      String bobPub = new String(Base64.encode(bob.getPublic().getEncoded()));
       
+      PrivateKey aliceRegenPriv = asymmetricEngine.regenPrivkey(alicePriv);
+      PublicKey aliceRegenPub = asymmetricEngine.regenPubkey(alicePub);
+      PrivateKey bobRegenPriv = asymmetricEngine.regenPrivkey(bobPriv);
+      PublicKey bobRegenPub = asymmetricEngine.regenPubkey(bobPub);
+      
+      String aliceOrigEncryptBobOrig = asymmetricEngine.encrypt(plaintext, alice.getPrivate(), bob.getPublic());
+      String aliceRegenEncryptBobRegen = asymmetricEngine.encrypt(plaintext, aliceRegenPriv, bobRegenPub);
+      String bobOrigEncryptAliceOrig = asymmetricEngine.encrypt(plaintext, bob.getPrivate(), alice.getPublic());
+      String bobRegenEncryptAliceRegen = asymmetricEngine.encrypt(plaintext, bobRegenPriv, aliceRegenPub);
+      
+      System.out.println("Alice privkey #1: " + new String(Base64.encode(alice.getPrivate().getEncoded())));
+      printBytes(alice.getPrivate().getEncoded());
+      
+      System.out.println("Alice privkey #2: " + new String(Base64.encode(aliceRegenPriv.getEncoded())));
+      printBytes(aliceRegenPriv.getEncoded());
+      
+      System.out.println("Alice pubkey #1: " + new String(Base64.encode(alice.getPublic().getEncoded())));
+      printBytes(alice.getPublic().getEncoded());
+      
+      System.out.println("Alice pubkey #2: " + new String(Base64.encode(aliceRegenPub.getEncoded())));
+      printBytes(aliceRegenPub.getEncoded());
+      
+      System.out.println("Bob privkey #1: " + new String(Base64.encode(bob.getPrivate().getEncoded())));
+      printBytes(bob.getPrivate().getEncoded());
+      
+      System.out.println("Bob privkey #2: " + new String(Base64.encode(bobRegenPriv.getEncoded())));
+      printBytes(bobRegenPriv.getEncoded());
+      
+      System.out.println("Bob pubkey #1: " + new String(Base64.encode(bob.getPublic().getEncoded())));
+      printBytes(bob.getPublic().getEncoded());
+      
+      System.out.println("Bob pubkey #2: " + new String(Base64.encode(bobRegenPub.getEncoded())));
+      printBytes(bobRegenPub.getEncoded());
+      
+      System.out.println("Alice -> Bob #1: " + aliceOrigEncryptBobOrig);
+      System.out.println("Alice -> Bob #2: " + aliceRegenEncryptBobRegen);
+      System.out.println("Bob -> Alice #1: " + bobOrigEncryptAliceOrig);
+      System.out.println("Bob -> Alice #2: " + bobRegenEncryptAliceRegen);
+      
+      String signedByAlice = asymmetricEngine.sign(plaintext, aliceRegenPriv);
+      System.out.println("signed by alice = " + signedByAlice);
+      String signedByBob = asymmetricEngine.sign(plaintext, bobRegenPriv);
+      System.out.println("signed by bob = " + signedByBob);
+      
+      System.out.println("alice signed by alice? " + asymmetricEngine.verify(plaintext, signedByAlice, aliceRegenPub));
+      System.out.println("alice signed by bob? " + asymmetricEngine.verify(plaintext, signedByAlice, bobRegenPub));
+      System.out.println("bob signed by bob? " + asymmetricEngine.verify(plaintext, signedByBob, bobRegenPub));
+      System.out.println("bob signed by alice? " + asymmetricEngine.verify(plaintext, signedByBob, aliceRegenPub));
       
     } catch(Exception e) {
       e.printStackTrace();
@@ -79,10 +110,12 @@ public class BCP2PTestDriver {
    * @param bytes the byte array
    */
   public static void printBytes(byte[] bytes) {
-    for(int i = 0; i < bytes.length; i++) {
+    int i;
+    for(i = 0; i < bytes.length; i++) {
       System.out.printf("%02X ", bytes[i]);
       if((i + 1) % 16 == 0) System.out.println();
     }
+    if((i + 1) % 16 != 0) System.out.println();
     System.out.println();
   }
 }
