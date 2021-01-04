@@ -1,0 +1,42 @@
+plugins {
+  id "com.github.johnrengelman.shadow" version "5.2.0"
+}
+
+apply plugin: 'java-library'
+apply plugin: 'eclipse'
+
+repositories {
+  jcenter()
+}
+
+group = prjGroup
+version = prjVer
+sourceCompatibility = prjCompat
+targetCompatibility = prjCompat
+
+dependencies {
+  implementation 'commons-cli:commons-cli:1.4'
+  implementation 'org.bouncycastle:bcprov-jdk15on:1.68'
+  testImplementation 'junit:junit:4.13'
+}
+
+eclipse {
+  classpath {
+    downloadJavadoc = true
+    downloadSources = true
+  }
+}
+
+jar {
+  manifest {
+    attributes 'Main-Class': prjGroup + '.' + prjMain
+  }
+}
+
+shadowJar {
+  shadowJar {
+    baseName = prjName
+    classifier = null
+    version = null
+  }
+}
