@@ -23,8 +23,8 @@ import org.bouncycastle.util.encoders.Base64;
  */
 public class SymmetricEngine {
   
-  private static final int BLOCK_SIZE = 16;
-  private static final int KEY_SIZE = 32;
+  private static final int BLOCK_SIZE = 16; // 16 bytes = 128 bits
+  private static final int KEY_SIZE = 32; // 32 bytes = 256 bits
   private static final String CHARSET = "UTF-8";
   
   private PaddedBufferedBlockCipher cipher = new PaddedBufferedBlockCipher(
