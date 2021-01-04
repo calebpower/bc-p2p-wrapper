@@ -56,9 +56,13 @@ public class BCP2PTestDriver {
       PublicKey bobRegenPub = asymmetricEngine.regenPubkey(bobPub);
       
       String aliceOrigEncryptBobOrig = asymmetricEngine.encrypt(plaintext, alice.getPrivate(), bob.getPublic());
+      System.out.println(asymmetricEngine.decrypt(aliceOrigEncryptBobOrig, bob.getPrivate(), alice.getPublic()));
       String aliceRegenEncryptBobRegen = asymmetricEngine.encrypt(plaintext, aliceRegenPriv, bobRegenPub);
+      System.out.println(asymmetricEngine.decrypt(aliceRegenEncryptBobRegen, bobRegenPriv, aliceRegenPub));
       String bobOrigEncryptAliceOrig = asymmetricEngine.encrypt(plaintext, bob.getPrivate(), alice.getPublic());
+      System.out.println(asymmetricEngine.decrypt(bobOrigEncryptAliceOrig, alice.getPrivate(), bob.getPublic()));
       String bobRegenEncryptAliceRegen = asymmetricEngine.encrypt(plaintext, bobRegenPriv, aliceRegenPub);
+      System.out.println(asymmetricEngine.decrypt(bobRegenEncryptAliceRegen, aliceRegenPriv, bobRegenPub));
       
       System.out.println("Alice privkey #1: " + new String(Base64.encode(alice.getPrivate().getEncoded())));
       printBytes(alice.getPrivate().getEncoded());
@@ -89,15 +93,38 @@ public class BCP2PTestDriver {
       System.out.println("Bob -> Alice #1: " + bobOrigEncryptAliceOrig);
       System.out.println("Bob -> Alice #2: " + bobRegenEncryptAliceRegen);
       
-      String signedByAlice = asymmetricEngine.sign(plaintext, aliceRegenPriv);
-      System.out.println("signed by alice = " + signedByAlice);
-      String signedByBob = asymmetricEngine.sign(plaintext, bobRegenPriv);
-      System.out.println("signed by bob = " + signedByBob);
+      {
+        String signedByAlice = asymmetricEngine.sign(plaintext, aliceRegenPriv);
+        System.out.println("signed by alice = " + signedByAlice);
+        String signedByBob = asymmetricEngine.sign(plaintext, bobRegenPriv);
+        System.out.println("signed by bob = " + signedByBob);
+        
+        
+        System.out.println("alice signed by alice? regen " + asymmetricEngine.verify(plaintext, signedByAlice, aliceRegenPub));
+        System.out.println("alice signed by bob? regen " + asymmetricEngine.verify(plaintext, signedByAlice, bobRegenPub));
+        System.out.println("bob signed by bob? regen " + asymmetricEngine.verify(plaintext, signedByBob, bobRegenPub));
+        System.out.println("bob signed by alice? regen " + asymmetricEngine.verify(plaintext, signedByBob, aliceRegenPub));
+        System.out.println("alice signed by alice? orig " + asymmetricEngine.verify(plaintext, signedByAlice, alice.getPublic()));
+        System.out.println("alice signed by bob? orig " + asymmetricEngine.verify(plaintext, signedByAlice, bob.getPublic()));
+        System.out.println("bob signed by bob? orig " + asymmetricEngine.verify(plaintext, signedByBob, bob.getPublic()));
+        System.out.println("bob signed by alice? orig " + asymmetricEngine.verify(plaintext, signedByBob, alice.getPublic()));
+      }
       
-      System.out.println("alice signed by alice? " + asymmetricEngine.verify(plaintext, signedByAlice, aliceRegenPub));
-      System.out.println("alice signed by bob? " + asymmetricEngine.verify(plaintext, signedByAlice, bobRegenPub));
-      System.out.println("bob signed by bob? " + asymmetricEngine.verify(plaintext, signedByBob, bobRegenPub));
-      System.out.println("bob signed by alice? " + asymmetricEngine.verify(plaintext, signedByBob, aliceRegenPub));
+      {
+        String signedByAlice = asymmetricEngine.sign(plaintext, alice.getPrivate());
+        System.out.println("signed by alice = " + signedByAlice);
+        String signedByBob = asymmetricEngine.sign(plaintext, bob.getPrivate());
+        System.out.println("signed by bob = " + signedByBob);
+        
+        System.out.println("alice signed by alice? regen " + asymmetricEngine.verify(plaintext, signedByAlice, aliceRegenPub));
+        System.out.println("alice signed by bob? regen " + asymmetricEngine.verify(plaintext, signedByAlice, bobRegenPub));
+        System.out.println("bob signed by bob? regen " + asymmetricEngine.verify(plaintext, signedByBob, bobRegenPub));
+        System.out.println("bob signed by alice? regen " + asymmetricEngine.verify(plaintext, signedByBob, aliceRegenPub));
+        System.out.println("alice signed by alice? orig " + asymmetricEngine.verify(plaintext, signedByAlice, alice.getPublic()));
+        System.out.println("alice signed by bob? orig " + asymmetricEngine.verify(plaintext, signedByAlice, bob.getPublic()));
+        System.out.println("bob signed by bob? orig " + asymmetricEngine.verify(plaintext, signedByBob, bob.getPublic()));
+        System.out.println("bob signed by alice? orig " + asymmetricEngine.verify(plaintext, signedByBob, alice.getPublic()));
+      }
       
     } catch(Exception e) {
       e.printStackTrace();

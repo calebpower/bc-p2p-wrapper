@@ -32,7 +32,7 @@ public class SymmetricEngine {
       new PKCS7Padding());
   
   /**
-   * Generates securely pseudorandom 256-bit key.
+   * Securely generates a pseudorandom 256-bit key.
    * 
    * @return a Base64-encoded 256-bit key
    * @throws NoSuchAlgorithmException thrown if the SecureRandom strong instance can't be found
